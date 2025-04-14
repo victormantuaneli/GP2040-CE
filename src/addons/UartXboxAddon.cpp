@@ -68,25 +68,24 @@ void UartXboxInput::process() {
     if (nextTimer < getMillis()) {
         // Leitura dos dados via UART
         uint8_t buffer[64];
-        int bytesRead = uart_read_blocking(UART_ID, buffer, sizeof(buffer));
+			
+				uart_read_blocking(UART_ID, buffer, sizeof(buffer));
+				
+				// Processa os dados e mapeia para os botões
+				buttonA = (buffer[0] & 0x01) != 0;
+				buttonB = (buffer[0] & 0x02) != 0;
+				buttonX = (buffer[0] & 0x04) != 0;
+				buttonY = (buffer[0] & 0x08) != 0;
+				buttonL = (buffer[0] & 0x10) != 0;
+				buttonR = (buffer[0] & 0x20) != 0;
+				dpadUp = (buffer[0] & 0x40) != 0;
+				dpadDown = (buffer[0] & 0x80) != 0;
 
-        if (bytesRead > 0) {
-            // Processa os dados e mapeia para os botões
-            buttonA = (buffer[0] & 0x01) != 0;
-            buttonB = (buffer[0] & 0x02) != 0;
-            buttonX = (buffer[0] & 0x04) != 0;
-            buttonY = (buffer[0] & 0x08) != 0;
-            buttonL = (buffer[0] & 0x10) != 0;
-            buttonR = (buffer[0] & 0x20) != 0;
-            dpadUp = (buffer[0] & 0x40) != 0;
-            dpadDown = (buffer[0] & 0x80) != 0;
-
-            // Atualiza os valores dos joysticks com dados fictícios
-            leftX = getJoystickXValue();  // Função fictícia
-            leftY = getJoystickYValue();  // Função fictícia
-            rightX = leftX;
-            rightY = leftY;
-        }
+				// Atualiza os valores dos joysticks com dados fictícios
+				leftX = getJoystickXValue();  // Função fictícia
+				leftY = getJoystickYValue();  // Função fictícia
+				rightX = leftX;
+				rightY = leftY;
 
         nextTimer = getMillis() + uIntervalMS;
     }
