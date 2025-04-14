@@ -1,48 +1,47 @@
-#include "gamepad.h"
+#include "addons/addon.hpp"
 #include "gpaddon.h"
+#include "gamepad_state.h"
 #include "hardware/uart.h"
 #include "hardware/gpio.h"
-#include "storagemanager.h"
 
 class UartXboxAddon : public GPAddon {
 public:
     void setup() override {
         uart_init(uart0, 115200);
-        gpio_set_function(0, GPIO_FUNC_UART);  // UART0 TX
-        gpio_set_function(1, GPIO_FUNC_UART);  // UART0 RX
+        gpio_set_function(0, GPIO_FUNC_UART); // TX
+        gpio_set_function(1, GPIO_FUNC_UART); // RX
     }
 
-    void process(Gamepad * gamepad) override {
+    void preprocess(GamepadState *state) override {
         const uint8_t packetSize = 16;
         uint8_t data[packetSize];
 
         while (uart_is_readable(uart0)) {
-            // Lê 1 byte para ver se é o início esperado (opcional, se tiver um header de sync)
-            int read = uart_read_blocking(uart0, data, packetSize);
-            if (read == packetSize) {
-                gamepad->lx = data[0];
-                gamepad->ly = data[1];
-                gamepad->rx = data[2];
-                gamepad->ry = data[3];
-                gamepad->lt = data[4];
-                gamepad->rt = data[5];
-
-                gamepad->buttons = (data[6] << 0) |
-                                   (data[7] << 1) |
-                                   (data[8] << 2) |
-                                   (data[9] << 3) |
-                                   (data[10] << 4) |
-                                   (data[11] << 5) |
-                                   (data[12] << 6) |
-                                   (data[13] << 7);
-
-                gamepad->dpad = data[14]; // Hat switch
+            for (int i = 0; i < packetSize; ++i) {
+                data[i] = uart_getc(uart0);
             }
+
+            state->lx = data[0];
+            state->ly = data[1];
+            state->rx = data[2];
+            state->ry = data[3];
+            state->lt = data[4];
+            state->rt = data[5];
+
+            // Buttons: bits 0–13 (máximo 14 botões nesse exemplo)
+            uint16_t buttons = 0;
+            for (int i = 0; i < 2; i++) {
+                buttons |= (data[6 + i] << (i * 8));
+            }
+            state->buttons = buttons;
+
+            // D-Pad hat (0–8)
+            state->hat = data[8];
         }
     }
 
     bool available() override {
-        return true; // ou checar alguma flag via Storage se quiser
+        return true;
     }
 };
 
