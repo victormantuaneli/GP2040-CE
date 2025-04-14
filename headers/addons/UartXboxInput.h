@@ -2,6 +2,9 @@
 #define _UART_XBOX_INPUT_H_
 
 #include <stdint.h>
+#include "addons/gpaddon.h"
+#include "gpaddon.h"
+#include "gamepad.h"
 
 class UartXboxInput : public GPAddon {
 public:
@@ -11,7 +14,6 @@ public:
     virtual void preprocess() {}
     virtual void postprocess(bool sent) {}
     virtual void reinit() {}
-    virtual std::string name() { return "UART Addon"; }
 private:
 
 };
