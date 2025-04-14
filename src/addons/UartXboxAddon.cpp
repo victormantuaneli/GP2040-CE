@@ -33,9 +33,9 @@ uint16_t rightY = 0;
 uint32_t nextTimer = 0;
 uint32_t uIntervalMS = 5;  // Intervalo entre as leituras em milissegundos
 // Definindo constantes para o tamanho do pacote e os valores de cabeçalho e rodapé
-#define FRAME_SIZE 64    // Defina o tamanho correto do pacote, dependendo do seu protocolo
+#define FRAME_SIZE 30    // Defina o tamanho correto do pacote, dependendo do seu protocolo
 #define HEADER 0xAA      // Exemplo de valor para o cabeçalho, substitua com o valor correto
-#define FOOTER 0x55      // Exemplo de valor para o rodapé, substitua com o valor correto
+#define FOOTER 0xFF      // Exemplo de valor para o rodapé, substitua com o valor correto
 
 void UartXboxInput::setup() {
     uart_init(UART_ID, UART_BAUD_RATE);
@@ -59,23 +59,33 @@ void UartXboxInput::process() {
         if (buffer[0] == HEADER) {
             uart_read_blocking(UART_ID, buffer + 1, FRAME_SIZE - 1);
 
-            if (buffer[17] != FOOTER) return;
+            if (buffer[29] != FOOTER) return;
 
             // Validação simples de checksum
-            uint8_t sum = 0;
-            for (int i = 1; i <= 15; i++) sum += buffer[i];
-            if (sum % 256 != buffer[16]) return;
+            //uint8_t sum = 0;
+            //for (int i = 1; i <= 15; i++) sum += buffer[i];
+            //if (sum % 256 != buffer[16]) return;
 
             // Interpretar os dados
-            uint8_t buttons_lo = buffer[1];
-            uint8_t buttons_hi = buffer[2];
-            uint16_t lx = buffer[3] | (buffer[4] << 8);
-            uint16_t ly = buffer[5] | (buffer[6] << 8);
-            uint16_t rx = buffer[7] | (buffer[8] << 8);
-            uint16_t ry = buffer[9] | (buffer[10] << 8);
-            uint16_t lt = buffer[11] | (buffer[12] << 8);
-            uint16_t rt = buffer[13] | (buffer[14] << 8);
-            uint8_t dpad = buffer[15];
+            // Interpretando os dados
+            uint8_t dpad = buffer[1];  // D-pad (8 bits)
+            uint16_t buttons = buffer[2] | (buffer[3] << 8);  // Botões (16 bits)
+            int16_t lx = buffer[4] | (buffer[5] << 8);  // Eixo X esquerdo
+            int16_t ly = buffer[6] | (buffer[7] << 8);  // Eixo Y esquerdo
+            int16_t rx = buffer[8] | (buffer[9] << 8);  // Eixo X direito
+            int16_t ry = buffer[10] | (buffer[11] << 8);  // Eixo Y direito
+            uint16_t brake = buffer[12] | (buffer[13] << 8);  // Trigger brake
+            uint16_t throttle = buffer[14] | (buffer[15] << 8);  // Trigger throttle
+            uint8_t misc = buffer[16];  // Botões adicionais
+
+            int16_t gyroX = buffer[17] | (buffer[18] << 8);  // Giroscópio X
+            int16_t gyroY = buffer[19] | (buffer[20] << 8);  // Giroscópio Y
+            int16_t gyroZ = buffer[21] | (buffer[22] << 8);  // Giroscópio Z
+
+            int16_t accelX = buffer[23] | (buffer[24] << 8);  // Acelerômetro X
+            int16_t accelY = buffer[25] | (buffer[26] << 8);  // Acelerômetro Y
+            int16_t accelZ = buffer[27] | (buffer[28] << 8);  // Acelerômetro Z
+
 
             Gamepad *gamepad = Storage::getInstance().GetGamepad();
 
