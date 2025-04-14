@@ -55,7 +55,8 @@ void UartXboxInput::process() {
         uint8_t buffer[FRAME_SIZE];
 
         // Espera por um pacote válido
-        if (uart_read_blocking(UART_ID, &buffer[0], 1) && buffer[0] == HEADER) {
+			  uart_read_blocking(UART_ID, buffer, sizeof(buffer));
+        if (buffer[0] == HEADER) {
             uart_read_blocking(UART_ID, buffer + 1, FRAME_SIZE - 1);
 
             if (buffer[17] != FOOTER) return;
