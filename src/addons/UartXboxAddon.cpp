@@ -33,90 +33,78 @@ uint16_t rightY = 0;
 uint32_t nextTimer = 0;
 uint32_t uIntervalMS = 5;  // Intervalo entre as leituras em milissegundos
 
-bool UartXboxInput::available() {
-    return true;
-}
-// Função para inicializar a UART
 void UartXboxInput::setup() {
-    // Configura o UART
     uart_init(UART_ID, UART_BAUD_RATE);
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-
     uart_set_hw_flow(UART_ID, false, false);
     uart_set_format(UART_ID, 8, 1, UART_PARITY_NONE);
-    
-    // Configura pinos de transmissão e recepção do UART
     uart_set_fifo_enabled(UART_ID, true);
-    
-    // Inicializa variáveis de controle
-    buttonA = false;
-    buttonB = false;
-    buttonX = false;
-    buttonY = false;
-    buttonL = false;
-    buttonR = false;
-    dpadUp = false;
-    dpadDown = false;
-    dpadLeft = false;
-    dpadRight = false;
-    buttonSelect = false;
-    buttonStart = false;
-
-    nextTimer = getMillis();
 }
 
-// Função de processamento dos dados recebidos via UART
+bool UartXboxInput::available() {
+    return uart_is_readable(UART_ID);
+}
+
 void UartXboxInput::process() {
-    if (nextTimer < getMillis()) {
-        // Leitura dos dados via UART
-        uint8_t buffer[64];
-			
-				uart_read_blocking(UART_ID, buffer, sizeof(buffer));
-				
-				// Processa os dados e mapeia para os botões
-				buttonA = (buffer[0] & 0x01) != 0;
-				buttonB = (buffer[0] & 0x02) != 0;
-				buttonX = (buffer[0] & 0x04) != 0;
-				buttonY = (buffer[0] & 0x08) != 0;
-				buttonL = (buffer[0] & 0x10) != 0;
-				buttonR = (buffer[0] & 0x20) != 0;
-				dpadUp = (buffer[0] & 0x40) != 0;
-				dpadDown = (buffer[0] & 0x80) != 0;
+    if (uart_is_readable(UART_ID)) {
+        uint8_t buffer[FRAME_SIZE];
 
-				// Atualiza os valores dos joysticks com dados fictícios
-				leftX = getJoystickXValue();  // Função fictícia
-				leftY = getJoystickYValue();  // Função fictícia
-				rightX = leftX;
-				rightY = leftY;
+        // Espera por um pacote válido
+        if (uart_read_blocking(UART_ID, &buffer[0], 1) && buffer[0] == HEADER) {
+            uart_read_blocking(UART_ID, buffer + 1, FRAME_SIZE - 1);
 
-        nextTimer = getMillis() + uIntervalMS;
+            if (buffer[17] != FOOTER) return;
+
+            // Validação simples de checksum
+            uint8_t sum = 0;
+            for (int i = 1; i <= 15; i++) sum += buffer[i];
+            if (sum % 256 != buffer[16]) return;
+
+            // Interpretar os dados
+            uint8_t buttons_lo = buffer[1];
+            uint8_t buttons_hi = buffer[2];
+            uint16_t lx = buffer[3] | (buffer[4] << 8);
+            uint16_t ly = buffer[5] | (buffer[6] << 8);
+            uint16_t rx = buffer[7] | (buffer[8] << 8);
+            uint16_t ry = buffer[9] | (buffer[10] << 8);
+            uint16_t lt = buffer[11] | (buffer[12] << 8);
+            uint16_t rt = buffer[13] | (buffer[14] << 8);
+            uint8_t dpad = buffer[15];
+
+            Gamepad *gamepad = Storage::getInstance().GetGamepad();
+
+            gamepad->state.lx = lx;
+            gamepad->state.ly = ly;
+            gamepad->state.rx = rx;
+            gamepad->state.ry = ry;
+            gamepad->state.lt = lt;
+            gamepad->state.rt = rt;
+
+            gamepad->hasAnalogTriggers = true;
+            gamepad->hasLeftAnalogStick = true;
+            gamepad->hasRightAnalogStick = true;
+
+            uint16_t buttons = buttons_lo | (buttons_hi << 8);
+
+            if (buttons & (1 << 0)) gamepad->state.buttons |= GAMEPAD_MASK_B2;  // A
+            if (buttons & (1 << 1)) gamepad->state.buttons |= GAMEPAD_MASK_B1;  // B
+            if (buttons & (1 << 2)) gamepad->state.buttons |= GAMEPAD_MASK_B4;  // X
+            if (buttons & (1 << 3)) gamepad->state.buttons |= GAMEPAD_MASK_B3;  // Y
+            if (buttons & (1 << 4)) gamepad->state.buttons |= GAMEPAD_MASK_L1;  // LB
+            if (buttons & (1 << 5)) gamepad->state.buttons |= GAMEPAD_MASK_R1;  // RB
+            if (buttons & (1 << 6)) gamepad->state.buttons |= GAMEPAD_MASK_S1;  // View
+            if (buttons & (1 << 7)) gamepad->state.buttons |= GAMEPAD_MASK_S2;  // Menu
+            if (buttons & (1 << 8)) gamepad->state.buttons |= GAMEPAD_MASK_A1;  // Xbox
+            if (buttons & (1 << 9)) gamepad->state.buttons |= GAMEPAD_MASK_L3;  // L3
+            if (buttons & (1 << 10)) gamepad->state.buttons |= GAMEPAD_MASK_R3; // R3
+
+            if (dpad & 0x01) gamepad->state.dpad |= GAMEPAD_MASK_UP;
+            if (dpad & 0x02) gamepad->state.dpad |= GAMEPAD_MASK_DOWN;
+            if (dpad & 0x04) gamepad->state.dpad |= GAMEPAD_MASK_LEFT;
+            if (dpad & 0x08) gamepad->state.dpad |= GAMEPAD_MASK_RIGHT;
+        }
     }
-
-    // Atualiza o estado do gamepad
-    Gamepad *gamepad = Storage::getInstance().GetGamepad();
-
-    gamepad->state.lx = leftX;
-    gamepad->state.ly = leftY;
-    gamepad->state.rx = rightX;
-    gamepad->state.ry = rightY;
-
-    gamepad->hasAnalogTriggers = false;
-    gamepad->hasLeftAnalogStick = true;
-
-    // Mapeia os botões para o estado do gamepad
-    if (buttonA) gamepad->state.buttons |= GAMEPAD_MASK_B2;
-    if (buttonB) gamepad->state.buttons |= GAMEPAD_MASK_B1;
-    if (buttonX) gamepad->state.buttons |= GAMEPAD_MASK_B4;
-    if (buttonY) gamepad->state.buttons |= GAMEPAD_MASK_B3;
-    if (buttonL) gamepad->state.buttons |= GAMEPAD_MASK_L1;
-    if (buttonR) gamepad->state.buttons |= GAMEPAD_MASK_R1;
-    if (buttonSelect) gamepad->state.buttons |= GAMEPAD_MASK_S1;
-    if (buttonStart) gamepad->state.buttons |= GAMEPAD_MASK_S2;
-    if (dpadUp) gamepad->state.dpad |= GAMEPAD_MASK_UP;
-    if (dpadDown) gamepad->state.dpad |= GAMEPAD_MASK_DOWN;
-    if (dpadLeft) gamepad->state.dpad |= GAMEPAD_MASK_LEFT;
-    if (dpadRight) gamepad->state.dpad |= GAMEPAD_MASK_RIGHT;
 }
 
 // Funções fictícias para simulação de leitura dos joysticks (substitua com sua lógica real)
