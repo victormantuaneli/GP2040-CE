@@ -2,12 +2,12 @@
 #define _UART_XBOX_INPUT_H_
 
 #include <stdint.h>
-#include "addons/gpaddon.h"
+#include "gpaddon.h"
 
 #define UART_ID uart1            // Pode ser uart0 se preferir
-#define UART_BAUDRATE 9600      // Ajuste conforme o dispositivo
-#define UART_TX_PIN 4           // Ajuste conforme necessário
-#define UART_RX_PIN 5           // Ajuste conforme necessário
+#define UART_BAUDRATE 115200      // Ajuste conforme o dispositivo
+#define UART_TX_PIN 0          // Ajuste conforme necessário
+#define UART_RX_PIN 1           // Ajuste conforme necessário
 
 class UartXboxInput : public GPAddon {
 public:
