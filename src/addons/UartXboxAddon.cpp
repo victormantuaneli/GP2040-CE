@@ -33,6 +33,9 @@ uint16_t rightY = 0;
 uint32_t nextTimer = 0;
 uint32_t uIntervalMS = 5;  // Intervalo entre as leituras em milissegundos
 
+bool UartXboxInput::available() {
+    return true;
+}
 // Função para inicializar a UART
 void UartXboxInput::setup() {
     // Configura o UART
