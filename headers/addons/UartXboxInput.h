@@ -32,6 +32,8 @@ private:
     uint16_t getJoystickXValue();
     uint16_t getJoystickYValue();
 
+    uint16_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
+
 };
 
 #endif // _UART_XBOX_INPUT_H_
