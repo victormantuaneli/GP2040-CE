@@ -22,6 +22,13 @@ private:
     uint32_t nextPollMs = 0;
     bool buttonA = false;
     bool buttonB = false;
+    uint16_t leftX = 0;
+    uint16_t leftY = 0;
+
+
+    uint16_t getJoystickXValue();
+    uint16_t getJoystickYValue();
+
 };
 
 #endif // _UART_XBOX_INPUT_H_
