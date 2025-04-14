@@ -32,6 +32,10 @@ uint16_t rightY = 0;
 
 uint32_t nextTimer = 0;
 uint32_t uIntervalMS = 5;  // Intervalo entre as leituras em milissegundos
+// Definindo constantes para o tamanho do pacote e os valores de cabeçalho e rodapé
+#define FRAME_SIZE 64    // Defina o tamanho correto do pacote, dependendo do seu protocolo
+#define HEADER 0xAA      // Exemplo de valor para o cabeçalho, substitua com o valor correto
+#define FOOTER 0x55      // Exemplo de valor para o rodapé, substitua com o valor correto
 
 void UartXboxInput::setup() {
     uart_init(UART_ID, UART_BAUD_RATE);
