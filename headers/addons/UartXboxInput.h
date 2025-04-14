@@ -3,14 +3,17 @@
 
 #include <stdint.h>
 
-class UartXboxInput {
+class UartXboxInput : public GPAddon {
 public:
-    void setup();
-    void process();
-
+    virtual bool available();
+    virtual void setup();       // SNESpad Setup
+    virtual void process();     // SNESpad Process
+    virtual void preprocess() {}
+    virtual void postprocess(bool sent) {}
+    virtual void reinit() {}
+    virtual std::string name() { return "UART Addon"; }
 private:
-    uint16_t getJoystickXValue();
-    uint16_t getJoystickYValue();
+
 };
 
 #endif // _UART_XBOX_INPUT_H_
