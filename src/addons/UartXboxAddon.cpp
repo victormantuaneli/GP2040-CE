@@ -1,3 +1,4 @@
+#include "addons/UartXboxInput.h"
 #include "drivermanager.h"
 #include "storagemanager.h"
 #include "hardware/gpio.h"
