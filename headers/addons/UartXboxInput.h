@@ -1,6 +1,7 @@
 #ifndef _UART_XBOX_INPUT_H_
 #define _UART_XBOX_INPUT_H_
 
+#include <string>
 #include <stdint.h>
 #include "gpaddon.h"
 
@@ -17,6 +18,8 @@ public:
     virtual void preprocess() {}
     virtual void postprocess(bool sent) {}
     virtual void reinit() {}
+		virtual std::string name() override { return "UartXboxInput"; }
+
 
 private:
     uint32_t nextPollMs = 0;
