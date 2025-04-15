@@ -67,57 +67,54 @@ void UartXboxInput::process() {
             //if (sum % 256 != buffer[16]) return;
 
             // Interpretar os dados
-            // Interpretando os dados
-            uint8_t dpad = buffer[1];  // D-pad (8 bits)
-            uint16_t buttons = buffer[2] | (buffer[3] << 8);  // Botões (16 bits)
-            int16_t lx = buffer[4] | (buffer[5] << 8);  // Eixo X esquerdo
-            int16_t ly = buffer[6] | (buffer[7] << 8);  // Eixo Y esquerdo
-            int16_t rx = buffer[8] | (buffer[9] << 8);  // Eixo X direito
-            int16_t ry = buffer[10] | (buffer[11] << 8);  // Eixo Y direito
-            uint16_t brake = buffer[12] | (buffer[13] << 8);  // Trigger brake
-            uint16_t throttle = buffer[14] | (buffer[15] << 8);  // Trigger throttle
-            uint8_t misc = buffer[16];  // Botões adicionais
-
-            int16_t gyroX = buffer[17] | (buffer[18] << 8);  // Giroscópio X
-            int16_t gyroY = buffer[19] | (buffer[20] << 8);  // Giroscópio Y
-            int16_t gyroZ = buffer[21] | (buffer[22] << 8);  // Giroscópio Z
-
-            int16_t accelX = buffer[23] | (buffer[24] << 8);  // Acelerômetro X
-            int16_t accelY = buffer[25] | (buffer[26] << 8);  // Acelerômetro Y
-            int16_t accelZ = buffer[27] | (buffer[28] << 8);  // Acelerômetro Z
-
-
-            Gamepad *gamepad = Storage::getInstance().GetGamepad();
-
-            gamepad->state.lx = lx;
-            gamepad->state.ly = ly;
-            gamepad->state.rx = rx;
-            gamepad->state.ry = ry;
-            gamepad->state.lt = lt;
-            gamepad->state.rt = rt;
-
-            gamepad->hasAnalogTriggers = true;
-            gamepad->hasLeftAnalogStick = true;
-            gamepad->hasRightAnalogStick = true;
-
-            uint16_t buttons = buttons_lo | (buttons_hi << 8);
-
-            if (buttons & (1 << 0)) gamepad->state.buttons |= GAMEPAD_MASK_B2;  // A
-            if (buttons & (1 << 1)) gamepad->state.buttons |= GAMEPAD_MASK_B1;  // B
-            if (buttons & (1 << 2)) gamepad->state.buttons |= GAMEPAD_MASK_B4;  // X
-            if (buttons & (1 << 3)) gamepad->state.buttons |= GAMEPAD_MASK_B3;  // Y
-            if (buttons & (1 << 4)) gamepad->state.buttons |= GAMEPAD_MASK_L1;  // LB
-            if (buttons & (1 << 5)) gamepad->state.buttons |= GAMEPAD_MASK_R1;  // RB
-            if (buttons & (1 << 6)) gamepad->state.buttons |= GAMEPAD_MASK_S1;  // View
-            if (buttons & (1 << 7)) gamepad->state.buttons |= GAMEPAD_MASK_S2;  // Menu
-            if (buttons & (1 << 8)) gamepad->state.buttons |= GAMEPAD_MASK_A1;  // Xbox
-            if (buttons & (1 << 9)) gamepad->state.buttons |= GAMEPAD_MASK_L3;  // L3
-            if (buttons & (1 << 10)) gamepad->state.buttons |= GAMEPAD_MASK_R3; // R3
-
-            if (dpad & 0x01) gamepad->state.dpad |= GAMEPAD_MASK_UP;
-            if (dpad & 0x02) gamepad->state.dpad |= GAMEPAD_MASK_DOWN;
-            if (dpad & 0x04) gamepad->state.dpad |= GAMEPAD_MASK_LEFT;
-            if (dpad & 0x08) gamepad->state.dpad |= GAMEPAD_MASK_RIGHT;
+            // Extrair dados do buffer
+		        uint8_t dpad = buffer[1];
+		        uint16_t buttons = buffer[2] | (buffer[3] << 8);
+		        uint16_t lx = buffer[4] | (buffer[5] << 8);
+		        uint16_t ly = buffer[6] | (buffer[7] << 8);
+		        uint16_t rx = buffer[8] | (buffer[9] << 8);
+		        uint16_t ry = buffer[10] | (buffer[11] << 8);
+		        uint16_t lt = buffer[12] | (buffer[13] << 8);
+		        uint16_t rt = buffer[14] | (buffer[15] << 8);
+		        uint8_t misc = buffer[16];
+		        uint16_t gyroX = buffer[17] | (buffer[18] << 8);
+		        uint16_t gyroY = buffer[19] | (buffer[20] << 8);
+		        uint16_t gyroZ = buffer[21] | (buffer[22] << 8);
+		        uint16_t accelX = buffer[23] | (buffer[24] << 8);
+		        uint16_t accelY = buffer[25] | (buffer[26] << 8);
+		        uint16_t accelZ = buffer[27] | (buffer[28] << 8);
+		
+		        Gamepad *gamepad = Storage::getInstance().GetGamepad();
+		
+		        gamepad->state.lx = lx;
+		        gamepad->state.ly = ly;
+		        gamepad->state.rx = rx;
+		        gamepad->state.ry = ry;
+		        gamepad->state.lt = lt;
+		        gamepad->state.rt = rt;
+		
+		        gamepad->hasAnalogTriggers = true;
+		        gamepad->hasLeftAnalogStick = true;
+		        gamepad->hasRightAnalogStick = true;
+		
+		        // Mapear botões
+		        if (buttons & (1 << 0)) gamepad->state.buttons |= GAMEPAD_MASK_B2;  // A
+		        if (buttons & (1 << 1)) gamepad->state.buttons |= GAMEPAD_MASK_B1;  // B
+		        if (buttons & (1 << 2)) gamepad->state.buttons |= GAMEPAD_MASK_B4;  // X
+		        if (buttons & (1 << 3)) gamepad->state.buttons |= GAMEPAD_MASK_B3;  // Y
+		        if (buttons & (1 << 4)) gamepad->state.buttons |= GAMEPAD_MASK_L1;  // LB
+		        if (buttons & (1 << 5)) gamepad->state.buttons |= GAMEPAD_MASK_R1;  // RB
+		        if (buttons & (1 << 6)) gamepad->state.buttons |= GAMEPAD_MASK_S1;  // View
+		        if (buttons & (1 << 7)) gamepad->state.buttons |= GAMEPAD_MASK_S2;  // Menu
+		        if (buttons & (1 << 8)) gamepad->state.buttons |= GAMEPAD_MASK_A1;  // Xbox
+		        if (buttons & (1 << 9)) gamepad->state.buttons |= GAMEPAD_MASK_L3;  // L3
+		        if (buttons & (1 << 10)) gamepad->state.buttons |= GAMEPAD_MASK_R3; // R3
+		
+		        // Mapear direcional
+		        if (dpad & 0x01) gamepad->state.dpad |= GAMEPAD_MASK_UP;
+		        if (dpad & 0x02) gamepad->state.dpad |= GAMEPAD_MASK_DOWN;
+		        if (dpad & 0x04) gamepad->state.dpad |= GAMEPAD_MASK_LEFT;
+		        if (dpad & 0x08) gamepad->state.dpad |= GAMEPAD_MASK_RIGHT;
         }
     }
 }
